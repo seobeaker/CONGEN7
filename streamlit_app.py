@@ -109,14 +109,14 @@ if st.button("Generate Content"):
         )
         content = response.choices[0].message.content
 
-        # Extract title and meta description from content
+        # Extract title and meta description
         title_match = re.search(r"(?i)title\s*[:\-]\s*(.*)", content)
         meta_match = re.search(r"(?i)meta description\s*[:\-]\s*(.*)", content)
 
         page_title = title_match.group(1).strip() if title_match else "Not Found"
         meta_description = meta_match.group(1).strip() if meta_match else "Not Found"
 
-        # Display title and meta description in light grey box
+        # ✅ Show Page Title and Meta Description FIRST in a grey box
         st.markdown(
             f"""
             <div style="border: 1px solid #ccc; background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
@@ -129,23 +129,25 @@ if st.button("Generate Content"):
             unsafe_allow_html=True
         )
 
-        # Display full content in another light grey box
+        # ✅ Remove duplicate lines from body content
+        cleaned_body = re.sub(r"(?i)(title|meta description)\s*[:\-].*", "", content).strip()
+
+        # ✅ Show cleaned body content in a grey box
         st.markdown(
             """
             <h4>Generated Body Content</h4>
             <div style="border: 1px solid #ccc; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
             """
-            + content.replace("\n", "<br>")
+            + cleaned_body.replace("\n", "<br>")
             + "</div>",
             unsafe_allow_html=True
         )
 
-        # Show word count
-        cleaned = re.sub(r'(?i)(title|meta description):.*', '', content)
-        count = len(re.findall(r"\b\w+\b", cleaned))
-        st.info(f"Total Word Count (excluding title/meta): {count}")
+        # ✅ Word count (excluding title/meta)
+        word_count = len(re.findall(r"\b\w+\b", cleaned_body))
+        st.info(f"Total Word Count (excluding title/meta): {word_count}")
 
-        # Download HTML version
+        # ✅ HTML download (uses original full markdown)
         html_out = markdown_to_html(content)
         st.download_button(
             label="Download as HTML",
