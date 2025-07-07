@@ -1,8 +1,6 @@
-# streamlit_app.py
 import streamlit as st
 import openai
 import re
-from io import StringIO
 
 # --- Brand tone dictionary ---
 brand_tones = {
@@ -118,19 +116,36 @@ if st.button("Generate Content"):
         page_title = title_match.group(1).strip() if title_match else "Not Found"
         meta_description = meta_match.group(1).strip() if meta_match else "Not Found"
 
-        st.subheader("Page Title")
-        st.write(page_title)
+        # Display title and meta description in light grey box
+        st.markdown(
+            f"""
+            <div style="border: 1px solid #ccc; background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <h4 style="margin-bottom: 5px;">Page Title</h4>
+                <p style="margin-top: 0;"><strong>{page_title}</strong></p>
+                <h4 style="margin-bottom: 5px;">Meta Description</h4>
+                <p style="margin-top: 0;">{meta_description}</p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-        st.subheader("Meta Description")
-        st.write(meta_description)
+        # Display full content in another light grey box
+        st.markdown(
+            """
+            <h4>Generated Body Content</h4>
+            <div style="border: 1px solid #ccc; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
+            """
+            + content.replace("\n", "<br>")
+            + "</div>",
+            unsafe_allow_html=True
+        )
 
-        st.subheader("Generated Body Content")
-        st.write(content)
-
+        # Show word count
         cleaned = re.sub(r'(?i)(title|meta description):.*', '', content)
         count = len(re.findall(r"\b\w+\b", cleaned))
         st.info(f"Total Word Count (excluding title/meta): {count}")
 
+        # Download HTML version
         html_out = markdown_to_html(content)
         st.download_button(
             label="Download as HTML",
