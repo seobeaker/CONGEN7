@@ -1,4 +1,3 @@
-
 # streamlit_app.py
 import streamlit as st
 import openai
@@ -76,7 +75,9 @@ length_option = st.selectbox("Length", ["Short (~750 words)", "Medium (~1000 wor
 length_map = {"Short (~750 words)": 750, "Medium (~1000 words)": 1000, "Long (~1500 words)": 1500}
 word_limit = length_map[length_option]
 
-model = st.selectbox("Model", ["gpt-4o", "gpt-4.1", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"])
+model = st.selectbox(
+    "Model", ["gpt-4o", "gpt-4.1", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"]
+)
 
 if st.button("Generate Content"):
     if not api_key or not primary or not category:
@@ -86,12 +87,16 @@ if st.button("Generate Content"):
         topics = [t for t in st.session_state.topics if t.strip()]
         tone = brand_tones.get(brand, "")
 
+        # Build prompt
         prompt = (
             f"{tone}\n\n"
             f"Write SEO content for the page category '{category}' for the brand '{brand}'.\n"
             f"Use primary keyword: '{primary}'. Secondary keywords: {secondary}.\n"
-            f"Minimum content length (excluding title/meta): {word_limit} words.\n"
-            f"No bullet lists, only paragraphs and headings.\n\n"
+            f"Your task:\n"
+            f"1. Create a punchy, SEO-optimized **Page Title** using the primary keyword.\n"
+            f"2. Generate a compelling **Meta Description** under 160 characters that includes secondary keywords.\n"
+            f"3. Write the main body content of at least {word_limit} words.\n"
+            f"4. Use normal paragraphs and headings only (no bullet points).\n"
         )
         if topics:
             prompt += "Structure:\n- Intro paragraph\n"
@@ -105,7 +110,21 @@ if st.button("Generate Content"):
             messages=[{"role": "user", "content": prompt}]
         )
         content = response.choices[0].message.content
-        st.subheader("Generated Content")
+
+        # Extract title and meta description from content
+        title_match = re.search(r"(?i)title\s*[:\-]\s*(.*)", content)
+        meta_match = re.search(r"(?i)meta description\s*[:\-]\s*(.*)", content)
+
+        page_title = title_match.group(1).strip() if title_match else "Not Found"
+        meta_description = meta_match.group(1).strip() if meta_match else "Not Found"
+
+        st.subheader("Page Title")
+        st.write(page_title)
+
+        st.subheader("Meta Description")
+        st.write(meta_description)
+
+        st.subheader("Generated Body Content")
         st.write(content)
 
         cleaned = re.sub(r'(?i)(title|meta description):.*', '', content)
